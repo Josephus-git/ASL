@@ -2,9 +2,10 @@ from data import DETRData
 from model import DETR
 import torch
 from torch import load
+import numpy as np
 from torch.utils.data import DataLoader 
 from matplotlib import pyplot as plt 
-from utils.boxes import rescale_bboxes
+from utils.boxes import rescale_bboxes, stacker
 from utils.setup import get_classes
 from utils.logger import get_logger
 from utils.rich_handlers import TestHandler, DetectionHandler
@@ -18,10 +19,10 @@ logger.print_banner()
 
 num_classes = 3
 test_dataset = DETRData('data/test', train=False) 
-test_dataloader = DataLoader(test_dataset, shuffle=True, batch_size=4, drop_last=True) 
+test_dataloader = DataLoader(test_dataset, shuffle=True, batch_size=4, drop_last=True, collate_fn=stacker) 
 model = DETR(num_classes=num_classes)
 model.eval()
-model.load_pretrained('pretrained/4426_model.pt')
+model.load_pretrained('checkpoints/99_model.pt')
 
 X, y = next(iter(test_dataloader))
 

@@ -6,7 +6,8 @@ from torch import optim, load, save
 from colorama import Fore  
 from utils.logger import get_logger
 from utils.rich_handlers import TrainingHandler, rich_training_context
-import sys 
+import sys
+import os
 import torch
 from utils.boxes import stacker
 
@@ -14,6 +15,9 @@ if __name__ == '__main__':
     # Initialize logger and handlers
     logger = get_logger("training")
     logger.print_banner()
+
+    # Ensure checkpoints directory exists
+    os.makedirs('checkpoints', exist_ok=True)
     
     train_dataset = DETRData('data/train') 
     train_dataloader = DataLoader(train_dataset, batch_size=4, collate_fn=stacker, drop_last=True) 
