@@ -72,18 +72,26 @@ class DETRData(Dataset):
             except:
                 continue
         
-        return {'image': image, 'bboxes': bboxes, 'class_labels': labels}
+        # Fallback: If stochastic augmentations fail to preserve boxes, apply only 
+        # basic resizing and formatting to ensure we return Tensors, not numpy arrays.
+        fallback_transform = A.Compose([
+            A.Resize(224, 224),
+            A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            A.ToTensorV2()
+        ], bbox_params=A.BboxParams(format='yolo', label_fields=['class_labels']))
+        
+        return fallback_transform(image=image, bboxes=bboxes, class_labels=labels)
 
     def __len__(self): 
         return len(self.labels) 
 
     def __getitem__(self, idx): 
-        self.label_path = os.path.join(self.labels_path, self.labels[idx]) 
-        self.image_name = self.labels[idx].split('.')[0]
-        self.image_path = os.path.join(self.images_path, f'{self.image_name}.jpg') 
+        label_path = os.path.join(self.labels_path, self.labels[idx]) 
+        image_name = self.labels[idx].split('.')[0]
+        image_path = os.path.join(self.images_path, f'{image_name}.jpg') 
         
-        img = Image.open(self.image_path)
-        with open(self.label_path, 'r') as f: 
+        img = Image.open(image_path).convert('RGB')
+        with open(label_path, 'r') as f: 
             annotations = f.readlines()
         class_labels = []
         bounding_boxes = []
@@ -100,7 +108,7 @@ class DETRData(Dataset):
         augmented_classes = augmented['class_labels']
 
         labels = torch.tensor(augmented_classes, dtype=torch.long)  
-        boxes = torch.tensor(augmented_bounding_boxes, dtype=torch.float32)
+        boxes = torch.as_tensor(augmented_bounding_boxes, dtype=torch.float32).reshape(-1, 4)
         return augmented_img_tensor, {'labels': labels, 'boxes': boxes}
 
 if __name__ == '__main__':
