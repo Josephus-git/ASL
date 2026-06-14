@@ -21,7 +21,7 @@ logger.realtime("Initializing real-time sign language detection...")
 transforms = A.Compose(
         [   
             A.Resize(224,224),
-            A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            A.ToFloat(max_value=255),
             A.ToTensorV2()
         ]
     )
@@ -47,7 +47,8 @@ while cap.isOpened():
         
     # Time the inference
     inference_start = time.time()
-    transformed = transforms(image=frame)
+    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    transformed = transforms(image=rgb_frame)
     result = model(torch.unsqueeze(transformed['image'], dim=0))
     inference_time = (time.time() - inference_start) * 1000  # Convert to ms
 

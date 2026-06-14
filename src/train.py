@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     train_batches = len(train_dataloader)
     test_batches = len(test_dataloader)
-    epochs = 100
+    epochs = 11
     
     # Log training configuration
     training_config = {

@@ -44,8 +44,7 @@ class DETRData(Dataset):
             "Random Crop 224x224 (training only)",
             "Final Resize to 224x224",
             "Horizontal Flip p=0.5 (training only)",
-            "Color Jitter (training only)",
-            "Normalize (ImageNet stats)",
+            "Scale to [0,1] (Float32)",
             "Convert to Tensor"
         ]
         self.data_handler.log_transform_info(transform_list)             
@@ -57,8 +56,7 @@ class DETRData(Dataset):
                 *([A.RandomCrop(width=224, height=224, p=0.33)] if self.train else []), # Example random crop
                 A.Resize(224,224),
                 *([A.HorizontalFlip(p=0.5)] if self.train else []),
-                *([A.ColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.5, p=0.5)] if self.train else []),
-                A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                A.ToFloat(max_value=255),
                 A.ToTensorV2()
             ], bbox_params=A.BboxParams(format='yolo', label_fields=['class_labels'])
         )
@@ -76,7 +74,7 @@ class DETRData(Dataset):
         # basic resizing and formatting to ensure we return Tensors, not numpy arrays.
         fallback_transform = A.Compose([
             A.Resize(224, 224),
-            A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            A.ToFloat(max_value=255),
             A.ToTensorV2()
         ], bbox_params=A.BboxParams(format='yolo', label_fields=['class_labels']))
         
@@ -112,7 +110,7 @@ class DETRData(Dataset):
         return augmented_img_tensor, {'labels': labels, 'boxes': boxes}
 
 if __name__ == '__main__':
-    dataset = DETRData('data/test', train=False) 
+    dataset = DETRData('data/train', train=True) 
     dataloader = DataLoader(dataset, collate_fn=stacker, batch_size=4, drop_last=True)
 
     X, y = next(iter(dataloader))
