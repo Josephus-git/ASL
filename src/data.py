@@ -98,6 +98,28 @@ class DETRData(Dataset):
             class_labels.append(annotation[0]) 
             bounding_boxes.append(annotation[1:])
         class_labels = np.array(class_labels).astype(int) 
+
+        # Define the remapping based on the user's description of current labels
+        # This assumes the original labels in the .txt files were:
+        # 0: 'before'
+        # 1: 'book' (implied, as 0, 2, 3 are taken)
+        # 2: 'computer'
+        # 3: 'drink'
+        
+        # Get the target class names and their desired IDs from config.json
+        target_class_names = get_classes() # e.g., ['book', 'drink', 'computer', 'before']
+        target_class_id_map = {name: idx for idx, name in enumerate(target_class_names)}
+        
+        # Create the remapping dictionary: original_id_from_txt -> desired_id_from_config
+        remap_dict = {
+            0: target_class_id_map['before'],   # Original 0 ('before') -> Desired 3 ('before')
+            1: target_class_id_map['book'],     # Original 1 ('book') -> Desired 0 ('book')
+            2: target_class_id_map['computer'], # Original 2 ('computer') -> Desired 2 ('computer')
+            3: target_class_id_map['drink']     # Original 3 ('drink') -> Desired 1 ('drink')
+        }
+        
+        # Apply the remapping to the class labels
+        class_labels = np.array([remap_dict[label] for label in class_labels])
         bounding_boxes = np.array(bounding_boxes).astype(float) 
 
         augmented = self.safe_transform(image=np.array(img), bboxes=bounding_boxes, labels=class_labels)
@@ -110,12 +132,13 @@ class DETRData(Dataset):
         return augmented_img_tensor, {'labels': labels, 'boxes': boxes}
 
 if __name__ == '__main__':
+    CLASSES = get_classes()
+    num_classes = len(CLASSES)
     dataset = DETRData('data/test', train=False) 
-    dataloader = DataLoader(dataset, collate_fn=stacker, batch_size=4, drop_last=True)
+    dataloader = DataLoader(dataset, collate_fn=stacker, batch_size=4, drop_last=False)
 
     X, y = next(iter(dataloader))
     print(Fore.LIGHTCYAN_EX + str(y) + Fore.RESET) 
-    CLASSES = get_classes() 
     fig, ax = plt.subplots(2,2) 
     axs = ax.flatten()
     for idx, (img, annotations, ax) in enumerate(zip(X, y, axs)): 
@@ -123,7 +146,7 @@ if __name__ == '__main__':
         box_classes = annotations['labels'] 
         boxes = rescale_bboxes(annotations['boxes'], (224,224))
         for box_class, bbox in zip(box_classes, boxes): 
-            if box_class != 3: 
+            if box_class < num_classes: 
                 xmin, ymin, xmax, ymax = bbox.detach().numpy()
                 print(xmin, ymin, xmax, ymax) 
                 ax.add_patch(plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin, fill=False, color=(0.000, 0.447, 0.741), linewidth=3))

@@ -26,10 +26,10 @@ transforms = A.Compose(
         ]
     )
 
-model = DETR(num_classes=3)
+CLASSES = get_classes()
+model = DETR(num_classes=len(CLASSES))
 model.eval()
 model.load_pretrained('checkpoints/499_model.pt')
-CLASSES = get_classes() 
 COLORS = get_colors() 
 
 logger.realtime("Starting camera capture...")

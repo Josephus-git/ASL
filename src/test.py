@@ -17,7 +17,8 @@ detection_handler = DetectionHandler()
 
 logger.print_banner()
 
-num_classes = 3
+CLASSES = get_classes()
+num_classes = len(CLASSES)
 test_dataset = DETRData('data/test', train=False) 
 test_dataloader = DataLoader(test_dataset, shuffle=True, batch_size=4, drop_last=True, collate_fn=stacker) 
 model = DETR(num_classes=num_classes)
