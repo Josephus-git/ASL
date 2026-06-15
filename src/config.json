@@ -1,8 +1,9 @@
 {
   "classes": [
-    "hello",
-    "iloveyou",
-    "thankyou"
+    "book",
+    "drink",
+    "computer",
+    "before"
   ],
   "colors": [
     [
@@ -19,6 +20,11 @@
       131,
       193,
       103
+    ],
+    [
+      0,
+      102,
+      204
     ]
   ]
 }
