@@ -28,7 +28,7 @@ transforms = A.Compose(
 
 model = DETR(num_classes=3)
 model.eval()
-model.load_pretrained('pretrained/4426_model.pt')
+model.load_pretrained('checkpoints/499_model.pt')
 CLASSES = get_classes() 
 COLORS = get_colors() 
 
@@ -54,7 +54,7 @@ while cap.isOpened():
 
     probabilities = result['pred_logits'].softmax(-1)[:,:,:-1] 
     max_probs, max_classes = probabilities.max(-1)
-    keep_mask = max_probs > 0.8
+    keep_mask = max_probs > 0.4
 
     batch_indices, query_indices = torch.where(keep_mask) 
 
